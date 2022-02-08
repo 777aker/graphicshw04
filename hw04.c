@@ -129,15 +129,16 @@ void InitCubeVAO(int shader) {
 // so skip that too
 unsigned int sphere_vbo = 1;
 unsigned int sphere_vao = 1;
-const int sphere_size = 0; // change this number after print
-const float sphere_data[999]; // change this number after print
+const int sphere_size = 1920; // change this number after print
+float sphere_data[1920]; // change this number after print
 
 // initialize sphere vbo
 void InitSphereVBO() {
+	// first populate sphere data
 	// populate sphere values in sphere data first
 	int place = 0;
 	int j = 0;
-	float n = 15.0; // how detailed I want the sphere to be
+	int n = 15; // how detailed I want the sphere to be
 	for (int i = 0; i < n; i++) {
 		float ph0 = i * 180.0 / n - 90;
 		float ph1 = (i + 1) * 180.0 / n - 90;
@@ -177,7 +178,16 @@ void InitSphereVBO() {
 			// glTexCoord2d(th/360,ph/180+.5);
 		}
 	}
-	printf("%d", place);
+	// i didnt feel like doing the math for how many points you needed so i let it tell me
+	//printf("%d", place);
+	//  Get buffer name
+	glGenBuffers(1, &sphere_vbo);
+	//  Bind VBO
+	glBindBuffer(GL_ARRAY_BUFFER, sphere_vbo);
+	//  Copy cube to VBO
+	glBufferData(GL_ARRAY_BUFFER, sizeof(sphere_data), sphere_data, GL_STATIC_DRAW);
+	//  Release VBO
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 // initialize sphere vao
@@ -194,7 +204,7 @@ void InitSphereVAO(int shader) {
 	// vertex
 	int loc = glGetAttribLocation(shader, "Vertex");
 	// for now our sphere vbo only uses vertices
-	glVertexAttribPointer(loc, 4, GL_FLOAT, 0, 0, (void*)0);
+	glVertexAttribPointer(loc, 4, GL_FLOAT, 0, 0, (void*) 0);
 	glEnableVertexAttribArray(loc);
 
 	//  Release VBO
@@ -291,12 +301,23 @@ void display(GLFWwindow* window) {
 	//  Set Projection, View, Modelview and Normal Matrix
 	id = glGetUniformLocation(lightshader, "ProjectionMatrix");
 	glUniformMatrix4fv(id, 1, 0, proj);
-	id = glGetUniformLocation(lightshader, "ViewMatrix");
-	glUniformMatrix4fv(id, 1, 0, view);
 	id = glGetUniformLocation(lightshader, "ModelViewMatrix");
+	
+	// I want the light source to actually appear at the light position
+	// so move the modelview matrix
+	// and scale it down it's too big
+	mat4translate(modelview, position[0], position[1], position[2]);
+	mat4scale(modelview, .25, .25, .25);
+
 	glUniformMatrix4fv(id, 1, 0, modelview);
-	id = glGetUniformLocation(lightshader, "NormalMatrix");
-	glUniformMatrix3fv(id, 1, 0, normat);
+	// solution to light source moving
+	id = glGetUniformLocation(lightshader, "Position");
+	glUniform4fv(id, 1, position);
+
+	// light source color
+	float lscolor[] = { 0.3, 0.3, 0.3, 1.0 };
+	id = glGetUniformLocation(lightshader, "LightColor");
+	glUniform4fv(id, 1, lscolor);
 
 	// bind our sphere
 	glBindVertexArray(sphere_vao);
@@ -350,9 +371,10 @@ void key(GLFWwindow* window, int key, int scancode, int action, int mods) {
 		break;
 		// reload shaders
 	case GLFW_KEY_R:
-		snowshader = CreateShaderProg("snowcube.vert", "snowcube.frag");
+		//snowshader = CreateShaderProg("snowcube.vert", "snowcube.frag");
 		regshader = CreateShaderProg("regularperpixel.vert", "regularperpixel.frag");
-		sphereshader = CreateShaderProg("weirdsphere.vert", "weirdsphere.frag");
+		//sphereshader = CreateShaderProg("weirdsphere.vert", "weirdsphere.frag");
+		lightshader = CreateShaderProg("lightsource.vert", "lightsource.frag");
 		break;
 	}
 	// wrap angles

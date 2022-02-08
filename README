@@ -1,0 +1,15 @@
+HW04: OpenGL 2 to 4
+
+Kelley Kelley
+
+Takes homework 3 and converts it to OpenGL 4 from OpenGL 2
+
+Time Spent:
+3 hours
+
+Key bindings
+  m    toggle shaders
+  arrows    change view angle
+  PgDn/PgUp    zoom in and out
+  0    reset view angle
+  esc    exit
