@@ -45,7 +45,12 @@ void main()
    // eye position 
    FragView = -P;
    // ambient color 
-   FragAmbient = (Global + Ambient) * Color;
+   //FragAmbient = (Global + Ambient) * Color;
+   // for this want to control color and every vertex have same color
+   vec4 color2 = Color; // i have absolutely no clue why you need this line first
+   // for it to do what I want
+   color2 = vec4(1,1,1,1);
+   FragAmbient = (Global + Ambient) * color2;
    // texture 
    Texcoord = Texture;
    // object Color
