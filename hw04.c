@@ -237,20 +237,20 @@ void display(GLFWwindow* window) {
 	float position[] = { 0, 3 * Cos(zh), 3 * Sin(zh), 1.0 };
 
 	//  Enable shader
-	glUseProgram(regshader);
+	glUseProgram(snowshader);
 
 	//  Set light property uniforms
-	int id = glGetUniformLocation(regshader, "fov");
+	int id = glGetUniformLocation(snowshader, "fov");
 	glUniform1f(id, fov);
-	id = glGetUniformLocation(regshader, "Global");
+	id = glGetUniformLocation(snowshader, "Global");
 	glUniform4fv(id, 1, global);
-	id = glGetUniformLocation(regshader, "Ambient");
+	id = glGetUniformLocation(snowshader, "Ambient");
 	glUniform4fv(id, 1, ambient);
-	id = glGetUniformLocation(regshader, "Diffuse");
+	id = glGetUniformLocation(snowshader, "Diffuse");
 	glUniform4fv(id, 1, diffuse);
-	id = glGetUniformLocation(regshader, "Specular");
+	id = glGetUniformLocation(snowshader, "Specular");
 	glUniform4fv(id, 1, specular);
-	id = glGetUniformLocation(regshader, "Position");
+	id = glGetUniformLocation(snowshader, "Position");
 	glUniform4fv(id, 1, position);
 
 	//  Create Projection matrix
@@ -278,14 +278,19 @@ void display(GLFWwindow* window) {
 	float normat[9];
 	mat4normalMatrix(modelview, normat);
 	//  Set Projection, View, Modelview and Normal Matrix
-	id = glGetUniformLocation(regshader, "ProjectionMatrix");
+	id = glGetUniformLocation(snowshader, "ProjectionMatrix");
 	glUniformMatrix4fv(id, 1, 0, proj);
-	id = glGetUniformLocation(regshader, "ViewMatrix");
+	id = glGetUniformLocation(snowshader, "ViewMatrix");
 	glUniformMatrix4fv(id, 1, 0, view);
-	id = glGetUniformLocation(regshader, "ModelViewMatrix");
+	id = glGetUniformLocation(snowshader, "ModelViewMatrix");
 	glUniformMatrix4fv(id, 1, 0, modelview);
-	id = glGetUniformLocation(regshader, "NormalMatrix");
+	id = glGetUniformLocation(snowshader, "NormalMatrix");
 	glUniformMatrix3fv(id, 1, 0, normat);
+
+	// time
+	float t = glfwGetTime();
+	id = glGetUniformLocation(snowshader, "time");
+	glUniform1f(id, t);
 
 	//  Bind attribute arrays using VAO (VAO knows VBO to use)
 	glBindVertexArray(cube_vao);
@@ -315,7 +320,7 @@ void display(GLFWwindow* window) {
 	glUniform4fv(id, 1, position);
 
 	// light source color
-	float lscolor[] = { 0.3, 0.3, 0.3, 1.0 };
+	float lscolor[] = { 1, .9, 0.0, 1.0 };
 	id = glGetUniformLocation(lightshader, "LightColor");
 	glUniform4fv(id, 1, lscolor);
 
@@ -371,7 +376,7 @@ void key(GLFWwindow* window, int key, int scancode, int action, int mods) {
 		break;
 		// reload shaders
 	case GLFW_KEY_R:
-		//snowshader = CreateShaderProg("snowcube.vert", "snowcube.frag");
+		snowshader = CreateShaderProg("snowcube.vert", "snowcube.frag");
 		regshader = CreateShaderProg("regularperpixel.vert", "regularperpixel.frag");
 		//sphereshader = CreateShaderProg("weirdsphere.vert", "weirdsphere.frag");
 		lightshader = CreateShaderProg("lightsource.vert", "lightsource.frag");
@@ -397,7 +402,7 @@ int main(int argc, char* argv[]) {
 	// initialize GLFW
 	GLFWwindow* window = InitWindow("HW04 Kelley Kelley", 1, 600, 600, &reshape, &key);
 	// load all the shaders
-	//snowshader = CreateShaderProg("snowcube.vert", "snowcube.frag");
+	snowshader = CreateShaderProg("snowcube.vert", "snowcube.frag");
 	regshader = CreateShaderProg("regularperpixel.vert", "regularperpixel.frag");
 	//sphereshader = CreateShaderProg("weirdsphere.vert", "weirdsphere.frag");
 	lightshader = CreateShaderProg("lightsource.vert", "lightsource.frag");
@@ -407,7 +412,7 @@ int main(int argc, char* argv[]) {
 	// Load cube into VBO
 	InitCubeVBO();
 	// Create cube VAO for gl4
-	InitCubeVAO(regshader);
+	InitCubeVAO(snowshader);
 	// load sphere into VBO
 	InitSphereVBO();
 	// Create sphere VAO for gl4
