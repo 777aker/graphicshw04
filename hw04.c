@@ -215,6 +215,32 @@ void InitSphereVAO(int shader) {
 	glUseProgram(0);
 }
 
+unsigned int sphere_vao2 = 1;
+// initialize sphere vao
+void InitSphereVAO2(int shader) {
+	// shader for attribute locations
+	glUseProgram(shader);
+
+	// create sphere vao to bind attribute arrays
+	glGenVertexArrays(1, &sphere_vao2);
+	glBindVertexArray(sphere_vao2);
+
+	// bind vbo
+	glBindBuffer(GL_ARRAY_BUFFER, sphere_vbo);
+	// vertex
+	int loc = glGetAttribLocation(shader, "Vertex");
+	// for now our sphere vbo only uses vertices
+	glVertexAttribPointer(loc, 4, GL_FLOAT, 0, 0, (void*)0);
+	glEnableVertexAttribArray(loc);
+
+	//  Release VBO
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	//  Release VAO
+	glBindVertexArray(0);
+	//  Release shader
+	glUseProgram(0);
+}
+
 // display function
 void display(GLFWwindow* window) {
 	//  Erase the window and the depth buffer
@@ -301,6 +327,28 @@ void display(GLFWwindow* window) {
 	//  Release attribute arrays
 	glBindVertexArray(0);
 
+	//  Enable shader
+	glUseProgram(sphereshader);
+
+	//  Set light property uniforms
+	id = glGetUniformLocation(sphereshader, "Position");
+	glUniform4fv(id, 1, position);
+	//  Set Projection, View, Modelview and Normal Matrix
+	id = glGetUniformLocation(sphereshader, "ProjectionMatrix");
+	glUniformMatrix4fv(id, 1, 0, proj);
+	float modelviewweird[16];
+	mat4copy(modelviewweird, modelview);
+	mat4scale(modelviewweird, 10, 10, 10);
+	id = glGetUniformLocation(sphereshader, "ModelViewMatrix");
+	glUniformMatrix4fv(id, 1, 0, modelviewweird);
+	id = glGetUniformLocation(sphereshader, "time");
+	glUniform1f(id, t);
+	// bind our sphere
+	glBindVertexArray(sphere_vao2);
+	// draw the sphere
+	glDrawArrays(GL_QUAD_STRIP, 0, sphere_size);
+	glBindVertexArray(0);
+
 	// now our light source sphere
 	glUseProgram(lightshader);
 	//  Set Projection, View, Modelview and Normal Matrix
@@ -311,10 +359,12 @@ void display(GLFWwindow* window) {
 	// I want the light source to actually appear at the light position
 	// so move the modelview matrix
 	// and scale it down it's too big
-	mat4translate(modelview, position[0], position[1], position[2]);
-	mat4scale(modelview, .25, .25, .25);
+	float modelviewlight[16];
+	mat4copy(modelviewlight, modelview);
+	mat4translate(modelviewlight, position[0], position[1], position[2]);
+	mat4scale(modelviewlight, .25, .25, .25);
 
-	glUniformMatrix4fv(id, 1, 0, modelview);
+	glUniformMatrix4fv(id, 1, 0, modelviewlight);
 	// solution to light source moving
 	id = glGetUniformLocation(lightshader, "Position");
 	glUniform4fv(id, 1, position);
@@ -378,7 +428,7 @@ void key(GLFWwindow* window, int key, int scancode, int action, int mods) {
 	case GLFW_KEY_R:
 		snowshader = CreateShaderProg("snowcube.vert", "snowcube.frag");
 		regshader = CreateShaderProg("regularperpixel.vert", "regularperpixel.frag");
-		//sphereshader = CreateShaderProg("weirdsphere.vert", "weirdsphere.frag");
+		sphereshader = CreateShaderProg("weirdsphere.vert", "weirdsphere.frag");
 		lightshader = CreateShaderProg("lightsource.vert", "lightsource.frag");
 		break;
 	}
@@ -404,7 +454,7 @@ int main(int argc, char* argv[]) {
 	// load all the shaders
 	snowshader = CreateShaderProg("snowcube.vert", "snowcube.frag");
 	regshader = CreateShaderProg("regularperpixel.vert", "regularperpixel.frag");
-	//sphereshader = CreateShaderProg("weirdsphere.vert", "weirdsphere.frag");
+	sphereshader = CreateShaderProg("weirdsphere.vert", "weirdsphere.frag");
 	lightshader = CreateShaderProg("lightsource.vert", "lightsource.frag");
 	// load the textures (I don't think I'll use it but might as well
 	tex = LoadTexBMP("pi.bmp");
@@ -417,6 +467,8 @@ int main(int argc, char* argv[]) {
 	InitSphereVBO();
 	// Create sphere VAO for gl4
 	InitSphereVAO(lightshader);
+	// create sphere vao for gl4 other shader
+	InitSphereVAO2(sphereshader);
 
 	// event loop
 	ErrCheck("init");
